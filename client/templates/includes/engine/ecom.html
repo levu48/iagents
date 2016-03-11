@@ -1,0 +1,89 @@
+<template name="ecom">
+
+    <script type="text/javascript">
+      	//get the source
+      	HTTP.get(Meteor.absoluteUrl("/rules/test5.js?ts=" + Date()), function(err, res) {
+      		if (err) { 
+      			console.log(err); 
+
+      		} else {
+	      		flow = nools.compile(res.content, {
+	      			name: "rules",
+		       		define: { 
+		       			Message: Message,
+		       			Personal: Personal  
+		       		},
+		       		scope: { sleep: sleep }
+	      		});
+
+       			session = flow.getSession();
+
+	      		personal = new Personal({
+	      			username: ['levu48'],
+	      			location: ['Garden Grove, CA'],
+	      			city: ['Garden Grove'],
+	      			state: ['CA'],
+	      			style: ['modern', 'casual'],
+	      			price: ['low']
+	      		});
+
+	      		session.assert(personal);
+
+		       	session.on("assert", function(fact) {
+		       		console.log("event: on assert, fact = " + fact);
+		       	});
+
+		       	Messages.find().observe({
+					added: function(message) {
+						if (message.receiver == Meteor.user().username) {
+							session.assert(new Message(message));
+							session.match();
+						}
+						
+					}
+				});
+	      	}
+	    });
+
+
+    </script>
+	<h2>Welcome to Client Engine</h2>
+
+	{{#if currentUser }}
+		<div class="row-fluid">
+			<div class="span12 well">
+				{{> inputClient }}
+			</div>
+		</div>
+		<div class="row-fluid">
+			<div class="span12 well">
+				{{> clientMessages }}
+			</div>
+		</div>
+	{{else}}
+		<div class="hero-unit">
+			<h2>Welcome to iAgents Engine</h2>
+			<p>Please login!</p>
+		</div>
+	{{/if}}
+</template>
+
+<template name="inputClient">
+	<input type="text" id="commandText" placeholder="Your command string goes here ..." style="width: 50%; margin-bottom: 0px">
+	<input type="button" value="Command" class="btn btn-primary command">
+</template>
+
+<template name="clientMessages">
+	<h4>Message board:</h4>
+
+	<div id="messages" style="background-color: #ffffff; border: 1px solid darkgray; max-height: 200px; overflow: auto; padding: 5px">
+        {{#each messages}}
+            {{> clientMessage}}
+        {{/each}}
+    </div>
+
+</template>
+
+<template name="clientMessage">
+	<p><strong>{{ sender }} >> {{ receiver }}</strong> <span style="font-size: 0.7em; color: darkgray">({{ ts }})</span>: <i>{{ cmd }}: {{ info.msg }}</i></p>
+</template>

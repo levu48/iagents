@@ -1,0 +1,17 @@
+define Info {
+    str : "",
+    constructor : function (str) {
+        this.text = str;
+    }
+}
+
+rule SeeYouAgain {
+    when {
+        m : Info m.text =~ /^hello world goodbye$/
+    }
+    then {
+    	Meteor.call('assertFact', 'hello world');
+    	Meteor.call('run');
+		Meteor.call('createMessage', "assert fact into server engine", "iAgents", "client");
+    }
+}

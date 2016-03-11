@@ -1,0 +1,12 @@
+.stage {
+	background:lightgray; 
+	color:black; 
+	text-align: center;
+	border-style:solid;
+	border-width:2;
+}
+
+.actor {
+	background: red;
+	color: white;
+}

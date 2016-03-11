@@ -1,0 +1,33 @@
+<template name="famous">
+	{{#Scene}}
+		{{#Node size="600,400" position="[10,10]"}}
+			{{#DOMElement class="stage"}}
+			{{/DOMElement}}
+			
+			{{#Node size="100,100" position="[150,200]"}}
+				{{#DOMElement class="actor" style="background:purple"}}
+					 
+				{{/DOMElement}}
+			{{/Node}}
+
+			{{#Node size="100,100" position="[350,20]"}}
+				{{#DOMElement class="actor" style="background:green"}}
+					 
+				{{/DOMElement}}
+			{{/Node}}
+
+			{{#famousEach actors}}
+				{{>actor}}
+			{{/famousEach}}
+
+		{{/Node}}
+	{{/Scene}}
+</template>
+
+<template name="actor">
+	{{#ActorNode position=position}}
+		{{#DOMElement class="actor"}}
+			{{name}}
+		{{/DOMElement}}
+	{{/ActorNode}}
+</template>

@@ -1,0 +1,119 @@
+
+define Actor {
+	name: "John Doe",
+	race: "Asian",
+	nationality: "Vietnamese",
+	age: "30",
+	location: "California",
+	language: ["English", "Vietnamese"],
+	x: 0,
+	y: 0,
+	constructor: function(x, y, name) {
+		this.x = x;
+		this.y = y;
+		this.name = name;
+	}
+}
+
+define Action {
+	name: "",
+	action: "",
+	x: 0,
+	y: 0,
+	constructor: function(name, action, x, y) {
+		this.name = name;
+		this.action = action;
+		this.x = x;
+		this.y = y;
+	}
+}
+
+
+define Counter {
+	count: 0,
+	constructor: function(count) {
+		this.count = count;
+	}
+}
+
+
+rule SeeYouAgain {
+    when {
+        m: Message m.cmd == 'GREET' && m.info.msg == 'hello world goodbye';
+    }
+    then {
+    	console.log("GOT THE MATCH FOR cmd GREET");
+    	Meteor.call('assertFact', 'hello world');
+    	Meteor.call('run');
+		Meteor.call('createMessage', "assert fact into server engine", "client");
+    }
+}
+
+rule processMessage {
+	salience: 100;
+	when {
+		m: Message;
+
+	} then {
+		console.log("sender " + m.sender + " to " + m.receiver + ": " + m.cmd);
+	}
+}
+
+rule NotCounter {
+	when {
+		not(c: Counter);
+
+	} then {
+		assert (new Counter(1));
+	}
+}
+
+
+rule HaltCount {
+	salience: 10;
+	when {
+		c: Counter c.count == 100;
+
+	} then {
+		retract(c);
+		halt();
+	}
+}
+
+
+rule LocateActor {
+	when {
+		a : Actor;
+		c : Counter;
+	
+	} then {
+		//sleep(1000);
+		//setTimeout(function() {
+			Meteor.call('createMessage', 'new position of ' + a.name + ' is ' + a.x + ' ' + a.y , "client");
+			x = Math.round(Math.random()*500);
+			y = Math.round(Math.random()*400);
+
+			Meteor.call('changePosition', x, y, a.name);
+			assert(new Action(a.name, "MOVE", x, y));
+			modify(c, function() {
+				this.count = c.count + 1;
+			});
+		//}, 1000);
+	}
+}
+
+rule UpdateLocation {
+	salience: 9;
+	when {
+		a : Actor;
+		m : Action m.name == a.name; 
+	
+	} then {
+		Meteor.call('createMessage', 'update location of ' + m.name + ' to ' + m.x + ' ' + m.y , "client");
+		modify(a, function() { 
+			this.x = m.x;
+			this.y = m.y;
+		});
+		retract(m);
+	}
+}

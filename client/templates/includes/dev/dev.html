@@ -1,0 +1,12 @@
+<template name="dev">
+	<h2>Resources for the development of iAgents</h2>
+	<ul>
+		{{#each websites}}
+			{{> website}}
+		{{/each}}
+	</ul>
+</template>
+
+<template name="website">
+	<li><a href="{{url}}" target="_blank">{{name}}</a></li>
+</template>

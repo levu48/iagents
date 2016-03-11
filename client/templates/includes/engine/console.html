@@ -1,0 +1,16 @@
+<template name="console">
+	<h4>Server Console:</h4>
+	<h4>Server Console:</h4>
+	<h4>Server Console:</h4>
+
+	<div id="messages" style="background-color: #ffffff; border: 1px solid darkgray; height: 200px; max-height: 200px; overflow: auto; padding: 5px">
+        {{#each messages}}
+            {{> message}}
+        {{/each}}
+    </div>
+
+</template>
+
+<template name="message">
+	<p><strong>{{ sender }} >> {{ receiver }}</strong> <span style="font-size: 0.7em; color: darkgray">({{ ts }})</span>: <i>{{ cmd }}: {{ info.msg }}</i></p>
+</template>

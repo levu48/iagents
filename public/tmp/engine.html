@@ -1,0 +1,170 @@
+<template name="clientEngine">
+
+    <script type="text/nools" id="rules">
+		define Actor {
+			x: 0,
+			y: 0,
+			name: "",
+			constructor: function(x, y, name) {
+				this.x = x;
+				this.y = y;
+				this.name = name;
+			}
+		}
+
+		define Action {
+			name: "",
+			action: "",
+			x: 0,
+			y: 0,
+			constructor: function(name, action, x, y) {
+				this.name = name;
+				this.action = action;
+				this.x = x;
+				this.y = y;
+			}
+		}
+
+
+		define Info {
+		    str : "",
+		    constructor : function (str) {
+		        this.text = str;
+		    }
+		}
+
+
+		define Counter {
+			count: 0,
+			constructor: function(count) {
+				this.count = count;
+			}
+		}
+
+
+		rule SeeYouAgain {
+		    when {
+		        m : Info m.text =~ /^hello world goodbye$/
+		    }
+		    then {
+		    	Meteor.call('assertFact', 'hello world');
+		    	Meteor.call('run');
+				Meteor.call('createMessage', "assert fact into server engine", "client");
+		    }
+		}
+
+		rule NotCounter {
+			when {
+				not(c: Counter);
+
+			} then {
+				assert (new Counter(1));
+			}
+		}
+
+
+		rule HaltCount {
+			salience: 10;
+			when {
+				c: Counter c.count == 100;
+
+			} then {
+				retract(c);
+				halt();
+			}
+		}
+
+
+		rule LocateActor {
+			when {
+				a : Actor;
+				c : Counter;
+			
+			} then {
+				//sleep(1000);
+				//setTimeout(function() {
+					Meteor.call('createMessage', 'new position of ' + a.name + ' is ' + a.x + ' ' + a.y , "client");
+					x = Math.round(Math.random()*500);
+					y = Math.round(Math.random()*400);
+
+					Meteor.call('changePosition', x, y, a.name);
+					assert(new Action(a.name, "MOVE", x, y));
+					modify(c, function() {
+						this.count = c.count + 1;
+					});
+				//}, 1000);
+			}
+		}
+
+		rule UpdateLocation {
+			salience: 9;
+			when {
+				a : Actor;
+				m : Action m.name == a.name; 
+			
+			} then {
+				Meteor.call('createMessage', 'update location of ' + m.name + ' to ' + m.x + ' ' + m.y , "client");
+				modify(a, function() { 
+					this.x = m.x;
+					this.y = m.y;
+				});
+				retract(m);
+			}
+		}
+
+    </script>
+
+    <script type="text/javascript">
+      	//get the source
+       	source = document.getElementById("rules").innerHTML;
+       	flow = nools.compile(source, {
+       		name: "rules",
+       		scope: {
+       			sleep: sleep
+       		}
+       	});
+        Info = flow.getDefined("Info");
+        Actor = flow.getDefined("Actor");
+        Action = flow.getDefined("Action");
+       	session = flow.getSession();
+    </script>
+	<h2>Welcome to Client Engine</h2>
+
+	{{#if currentUser }}
+		<div class="row-fluid">
+			<div class="span12 well">
+				{{> inputClient }}
+			</div>
+		</div>
+		<div class="row-fluid">
+			<div class="span12 well">
+				{{> messages }}
+			</div>
+		</div>
+	{{else}}
+		<div class="hero-unit">
+			<h2>Welcome to iAgents Engine</h2>
+			<p>Please login!</p>
+		</div>
+	{{/if}}
+</template>
+
+<template name="inputClient">
+	<input type="text" id="commandText" placeholder="Your command string goes here ..." style="width: 50%; margin-bottom: 0px">
+	<input type="button" value="Command" class="btn btn-primary command">
+</template>
+
+<template name="messages">
+	<h4>Message board:</h4>
+
+	<div id="messages" style="background-color: #ffffff; border: 1px solid darkgray; max-height: 200px; overflow: auto; padding: 5px">
+        {{#each messages}}
+            {{> message}}
+        {{/each}}
+    </div>
+
+</template>
+
+<template name="message">
+	<p><strong>{{ username }}</strong> <span style="font-size: 0.7em; color: darkgray">({{ timestamp }})</span>: <i>{{ message }}</i></p>
+</template>

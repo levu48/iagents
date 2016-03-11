@@ -1,0 +1,56 @@
+define Actor {
+	x: 0,
+	y: 0,
+	name: "",
+	constructor: function(x, y, name) {
+		this.x = x;
+		this.y = y;
+		this.name = name;
+	}
+}
+
+define Action {
+	name: "",
+	action: "",
+	x: 0,
+	y: 0,
+	constructor: function(name, action, x, y) {
+		this.name = name;
+		this.action = action;
+		this.x = x;
+		this.y = y;
+	}
+}
+
+
+define Info {
+    str : "",
+    constructor : function (str) {
+        this.text = str;
+    }
+}
+
+rule SeeYouAgain {
+    when {
+        m : Info m.text =~ /^hello world goodbye$/
+    }
+    then {
+    	Meteor.call('assertFact', 'hello world');
+    	Meteor.call('run');
+		Meteor.call('createMessage', "assert fact into server engine", "client");
+    }
+}
+
+rule LocateActor {
+	when {
+		a : Actor 
+	
+	} then {
+		Meteor.call('createMessage', 'new position of ' + a.name + ' is ' + a.x + ' ' + a.y , "client");
+	}
+}
+
+
+
+
+

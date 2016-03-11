@@ -1,0 +1,99 @@
+define Message {
+    text : '',
+    constructor : function (message) {
+        this.text = message;
+    }
+}
+
+define House {
+    text: "house",
+    beds: 0,
+    baths: 0,
+    type: "single", 
+    size: 0,
+    lotsize: 0,
+    price: 0,
+    address: '',
+    zipcode: 0, 
+    url: '',
+    seller: '',
+    buyer: '',
+    lender: '',
+    status: '',
+    loan_amount: 0,
+    rate: 0,
+    constructor: function (objStr) {
+        var obj = JSON.parse(objStr);
+        this.beds = obj.beds;
+        this.baths = obj.baths;
+        this.type = obj.type;
+        this.size = obj.size;
+        this.lotsize = obj.lotsize;
+        this.price = obj.price;
+        this.address = obj.address;
+        this.zipcode = obj.zipcode;
+        this.url = obj.url;
+        this.seller = obj.seller;
+        this.buyer = obj.buyer;
+        this.lender = obj.lender;
+        this.status = obj.status;
+        this.loan_amount = obj.loan_amount;
+        this.rate = obj.rate;
+    }
+}
+
+rule See_you_again {
+    when {
+        m : Message m.text =~ /^hello world goodbye$/
+    } then {
+        socket.emit('mesg', 'See you again.');
+    }
+}
+
+rule Create_tmp_house {
+    when {
+        m: Message m.text == 'FIND HOUSE';
+        not (f: House f.status == 'considering');
+    } then {
+        assert(new House('{"price": 10000000, "beds": 0, "baths": 0, "status": "considering"}'));
+        retract(m);
+        //console.log(session.getFacts(House));  // this one stops the execution
+    }
+}
+
+rule Find_house {
+    when {
+        f: House f.status == 'data' && f.beds >= 3 ;
+        b: House b.status == 'considering' && f.price < b.price;
+    } then {
+        modify(b, function() {
+            this.price = f.price;
+            this.beds = f.beds;
+            this.baths = f.baths;
+            this.address = f.address;
+            this.zipcode = f.zipcode;
+            this.seller = f.seller;
+            this.buyer = username;
+        });
+    }
+} 
+
+rule Find_house_done {
+    salience: -1;
+    when {
+        b: House b.status === 'considering';
+    } then {
+        modify(b, function() {
+            this.status = "looking for loan";
+        });
+    }
+} 
+
+rule Send_to_loan_server {
+    when {
+        b: House b.status === 'looking for loan';
+    } then {
+        socket.emit('mesg', 'HOUSE:POST ' + JSON.stringify(b));
+        retract(b);
+    }
+} 
